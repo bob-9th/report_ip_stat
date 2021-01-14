@@ -10,14 +10,6 @@ using namespace std;
 struct A {
 	int send, recv;
 	int sB, rB;
-
-	bool operator<(const A &b) const {
-		if (send != b.send) return send < b.send;
-		if (recv != b.recv) return recv < b.recv;
-		if (sB != b.sB) return sB < b.sB;
-		if (rB != b.rB) return rB < b.rB;
-		return 0;
-	}
 };
 
 bool operator<(const ether_addr &a, const ether_addr &b) {
@@ -25,16 +17,6 @@ bool operator<(const ether_addr &a, const ether_addr &b) {
 	for (int i = 0; i < ETH_ALEN; i++)
 		if (a.ether_addr_octet[i] != b.ether_addr_octet[i]) {
 			f = a.ether_addr_octet[i] < b.ether_addr_octet[i];
-			break;
-		}
-	return f;
-}
-
-bool operator==(const ether_addr &a, const ether_addr &b) {
-	bool f = true;
-	for (int i = 0; i < ETH_ALEN; i++)
-		if (a.ether_addr_octet[i] != b.ether_addr_octet[i]) {
-			f = false;
 			break;
 		}
 	return f;
@@ -61,12 +43,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	unordered_map<uint32_t, A> mp; //ip
-	set<pair<ether_addr, A>> mac_mp; //mac address
+	map<ether_addr, A> mac_mp; //mac address
 
 	auto update = [](auto &mac_mp, const ether_addr &mac, bool isRecv, int byteLen) {
-		auto it = mac_mp.lower_bound(make_pair(mac, A{}));
-		A val = {};
-		if (it != mac_mp.end() && it->first == mac) val = it->second, mac_mp.erase(it);
+		A &val = mac_mp[mac];
 		if (isRecv) {
 			++val.recv;
 			val.rB += byteLen;
@@ -74,7 +54,6 @@ int main(int argc, char *argv[]) {
 			++val.send;
 			val.sB += byteLen;
 		}
-		mac_mp.insert(make_pair(mac, val));
 	};
 
 	while (1) {
