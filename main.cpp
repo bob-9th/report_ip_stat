@@ -98,11 +98,11 @@ int main(int argc, char *argv[]) {
 
 		ip *_ip = (ip *) (packet + 14);
 		if (ntohs(eth->ether_type) == ETHERTYPE_IP) {
-			auto &dst = mp[_ip->ip_src.s_addr];
+			auto &dst = mp[_ip->ip_dst.s_addr];
 			++dst.recv;
 			dst.rB += header->caplen;
 
-			auto &src = mp[_ip->ip_dst.s_addr];
+			auto &src = mp[_ip->ip_src.s_addr];
 			++src.send;
 			src.sB += header->caplen;
 		}
