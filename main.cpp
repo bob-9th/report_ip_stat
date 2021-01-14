@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
 	unordered_map<uint32_t, A> mp; //ip
 	map<ether_addr, A> mac_mp; //mac address
 
-	auto update = [](auto &mac_mp, const ether_addr &mac, bool isRecv, int byteLen) {
-		A &val = mac_mp[mac];
+	auto update = [](auto &mac_mp, const auto &key, bool isRecv, int byteLen) {
+		A &val = mac_mp[key];
 		if (isRecv) {
 			++val.recv;
 			val.rB += byteLen;
@@ -71,19 +71,14 @@ int main(int argc, char *argv[]) {
 
 		ether_addr tmp{};
 		memcpy(tmp.ether_addr_octet, eth->ether_dhost, sizeof(eth->ether_dhost));
-		update(mac_mp, tmp, true, header->caplen);
+		update(mac_mp, tmp, true, header->caplen); //recv ethernet packet
 		memcpy(tmp.ether_addr_octet, eth->ether_shost, sizeof(eth->ether_shost));
-		update(mac_mp, tmp, false, header->caplen);
+		update(mac_mp, tmp, false, header->caplen); //send ethernet packet
 
 		ip *_ip = (ip *) (packet + 14);
 		if (ntohs(eth->ether_type) == ETHERTYPE_IP) {
-			auto &dst = mp[_ip->ip_dst.s_addr];
-			++dst.recv;
-			dst.rB += header->caplen;
-
-			auto &src = mp[_ip->ip_src.s_addr];
-			++src.send;
-			src.sB += header->caplen;
+			update(mp, _ip->ip_dst.s_addr, true, header->caplen); //recv ip packet
+			update(mp, _ip->ip_src.s_addr, false, header->caplen); //send ip packet
 		}
 	}
 
