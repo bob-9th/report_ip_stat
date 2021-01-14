@@ -1,4 +1,4 @@
-# report_ip_stat
+# report_packet_stat
 ## Installation
 ```
 sudo apt install libpcap-dev
