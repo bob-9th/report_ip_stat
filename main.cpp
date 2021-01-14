@@ -30,6 +30,16 @@ bool operator<(const ether_addr &a, const ether_addr &b) {
 	return f;
 }
 
+bool operator==(const ether_addr &a, const ether_addr &b) {
+	bool f = true;
+	for (int i = 0; i < ETH_ALEN; i++)
+		if (a.ether_addr_octet[i] != b.ether_addr_octet[i]) {
+			f = false;
+			break;
+		}
+	return f;
+}
+
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		cout << "syntax: report_ip_stat <pcap path>\n";
@@ -56,7 +66,7 @@ int main(int argc, char *argv[]) {
 	auto update = [](auto &mac_mp, const ether_addr &mac, bool isRecv, int byteLen) {
 		auto it = mac_mp.lower_bound(make_pair(mac, A{}));
 		A val = {};
-		if (it != mac_mp.end()) val = it->second, mac_mp.erase(it);
+		if (it != mac_mp.end() && it->first == mac) val = it->second, mac_mp.erase(it);
 		if (isRecv) {
 			++val.recv;
 			val.rB += byteLen;
